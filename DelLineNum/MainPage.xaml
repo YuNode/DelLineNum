@@ -7,7 +7,11 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid >
+        <Grid.Background>
+            <ImageBrush x:Name="imgBackground"  Stretch="UniformToFill" />
+        </Grid.Background>
+        
         <TextBox x:Name="textBox" HorizontalAlignment="Left" Margin="10,10,0,0" Text="" VerticalAlignment="Top" Height="537" Width="340" TextWrapping="Wrap"/>
         <Button x:Name="button" Content="去除行号" HorizontalAlignment="Left" Margin="10,564,0,0" VerticalAlignment="Top" Click="btndelNum_Click"/>
 

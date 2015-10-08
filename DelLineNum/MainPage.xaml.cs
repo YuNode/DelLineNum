@@ -5,6 +5,8 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -12,6 +14,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
 
@@ -29,6 +32,7 @@ namespace DelLineNum
         public MainPage()
         {
             this.InitializeComponent();
+            ReadSettings();
         }
 
         private async void btndelNum_Click(object sender, RoutedEventArgs e)
@@ -96,5 +100,81 @@ namespace DelLineNum
 
             this.textBox.Text = arr;
         }
+
+        ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+        string mestxt;
+        int index;
+        private async void ReadSettings()
+        {
+            //读取配置信息
+            string saveday = (string)localSettings.Values["saveday"];
+            if (saveday == null)
+            {
+                // No data
+#if DEBUG
+                MessageDialog md = new MessageDialog("没有数据", "提示");
+                await md.ShowAsync();
+#endif
+                SetBackground("old");
+            }
+            else
+            {
+                // Access data in value
+                if (saveday == DateTime.Now.ToString("yyyy-MM-dd"))
+                {
+                    SetBackground("old");
+                }
+                else
+                {
+                    SetBackground("new");
+                }
+            }
+        }
+
+
+        private async void SetBackground(string newORrold)
+        {
+
+
+            WriteableBitmap writeAbleBitmap = new WriteableBitmap(340, 460);
+
+            StorageFolder pictureFolder = await KnownFolders.PicturesLibrary.GetFolderAsync("Backgrounds");
+            IReadOnlyList<StorageFile> picfiles = await pictureFolder.GetFilesAsync();
+
+            //读取背景文件夹信息
+            StorageFolder mes = await pictureFolder.CreateFolderAsync("mes", CreationCollisionOption.OpenIfExists);
+            IReadOnlyList<StorageFolder> folders = await mes.GetFoldersAsync();
+            if (folders.Count == 0)
+            {
+                StorageFolder ind = await mes.CreateFolderAsync("0", CreationCollisionOption.OpenIfExists);
+            }
+            mestxt = folders[0].Name;
+            //var bgmes = await pictureFolder.CreateFileAsync("bgmes.jpg", CreationCollisionOption.OpenIfExists);
+            //mestxt = await FileIO.ReadTextAsync(bgmes);
+            index = Convert.ToInt16(mestxt);
+            if (newORrold == "new")
+            {
+                index = index + 1;
+            }
+
+            if (index == picfiles.Count)
+                index = 0;
+
+            IRandomAccessStream stream = await picfiles[index].OpenAsync(FileAccessMode.Read);
+            await writeAbleBitmap.SetSourceAsync(stream);
+            imgBackground.ImageSource = writeAbleBitmap;
+            try
+            {
+                await folders[0].RenameAsync(Convert.ToString(index), NameCollisionOption.ReplaceExisting);
+            }
+            catch
+            {
+
+            }
+
+            localSettings.Values["saveday"] = DateTime.Now.ToString("yyyy-MM-dd");
+        }
+
+
     }
 }
